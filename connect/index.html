@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log in</title>
+    <link rel="stylesheet" href="auth.css" />
+    <script src="auth.js"></script>
+  </head>
+
+  <body>
+    <main class="card">
+      <h1>Log in</h1>
+
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+
+        <button type="submit">Log in</button>
+        <p id="message" class="message" role="alert"></p>
+      </form>
+
+      <p class="switch">No account yet? <a href="register.html">Register here</a></p>
+    </main>
+
+    <script>
+      const loginForm = document.getElementById("login-form");
+      const message = document.getElementById("message");
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        message.textContent = "";
+
+        const name = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+          const result = await apiRequest("/login", {
+            method: "POST",
+            body: { name, password },
+          });
+
+          if (result.ok) {
+            saveToken(result.data.token);
+            window.location.href = "profile.html.html";
+          } else {
+            showMessage(message, errorMessage(result, "Log in failed. Please try again."));
+          }
+        } catch (error) {
+          showMessage(message, "Can't reach the server. Is the backend running?");
+        }
+      });
+    </script>
+  </body>
+</html>

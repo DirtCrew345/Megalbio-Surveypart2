@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile</title>
+    <link rel="stylesheet" href="auth.css" />
+    <script src="auth.js"></script>
+  </head>
+
+  <body>
+    <main class="card">
+      <h1 id="greeting">Loading...</h1>
+      <p id="user-id" class="muted"></p>
+
+      <button id="logout-button" type="button">Log out</button>
+      <p id="message" class="message" role="alert"></p>
+    </main>
+
+    <script>
+      const greeting = document.getElementById("greeting");
+      const userIdText = document.getElementById("user-id");
+      const message = document.getElementById("message");
+
+      function goToLogin() {
+        window.location.href = "index.html";
+      }
+
+      async function loadProfile() {
+        // No token means nobody is logged in on this browser
+        if (!getToken()) {
+          goToLogin();
+          return;
+        }
+
+        try {
+          const result = await apiRequest("/me", { useToken: true });
+
+          if (result.status === 401) {
+            // Token is missing, wrong, or expired
+            clearToken();
+            goToLogin();
+            return;
+          }
+          if (!result.ok) {
+            showMessage(message, errorMessage(result, "Could not load your profile."));
+            return;
+          }
+
+          greeting.textContent = `Welcome, ${result.data.user.name}!`;
+          userIdText.textContent = `User ID: ${result.data.user.id}`;
+        } catch (error) {
+          showMessage(message, "Can't reach the server. Is the backend running?");
+        }
+      }
+
+      document.getElementById("logout-button").addEventListener("click", async () => {
+        try {
+          await apiRequest("/logout", { method: "POST", useToken: true });
+        } catch (error) {
+          // Server unreachable: still log out on this device
+        }
+        clearToken();
+        goToLogin();
+      });
+
+      loadProfile();
+    </script>
+  </body>
+</html>
